@@ -20,7 +20,7 @@ class AWSFileClientUtility(object):
 
     def getAWSConfiguration(self):
         """ Collect configuration infomation for aws client. """
-        #TODO: temporary we will save configuration in property sheet.
+        # TODO: temporary we will save configuration in property sheet.
         #      it will be good to have more flexible solution for this.
         pp = getToolByName(getSite(), 'portal_properties')
         awsconf_sheet = getattr(pp, AWSCONF_SHEET)
@@ -43,11 +43,11 @@ class AWSFileClientUtility(object):
     def getFileClient(self):
         """ Provide an aws file client. """
         config = self.getAWSConfiguration()
-        client = AWSFileClient(config['aws_key_id'],
-                               config['aws_seecret_key'],
-                               config['aws_bucket_name'],
-                               aws_filename_prefix=
-                               config['aws_filename_prefix'])
+        client = AWSFileClient(
+            config['aws_key_id'],
+            config['aws_seecret_key'],
+            config['aws_bucket_name'],
+            aws_filename_prefix=config['aws_filename_prefix'])
         return client
 
 aws_utility = AWSFileClientUtility()
