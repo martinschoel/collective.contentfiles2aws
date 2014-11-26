@@ -17,6 +17,17 @@ class AWSUtilView(BrowserView):
         accessor = field.getAccessor(instance)
         return accessor()
 
+    def get_domain(self):
+        utility = getUtility(IAWSFileClientUtility)
+        url = "http://%s.%s" % (utility.getBucketName(),
+                                utility.getFileClient().connection.server)
+
+        cdn = utility.get_alt_cdn_domain()
+        if cdn:
+            url = 'http://%s/' % cdn
+
+        return url
+
     def getUrlFromBrain(self, brain, name, scale=None):
         if scale:
             name = '%s_%s' % (name, scale)
@@ -25,13 +36,9 @@ class AWSUtilView(BrowserView):
            name in brain.aws_sources:
             sid = brain.aws_sources[name]
             aws_utility = getUtility(IAWSFileClientUtility)
-            bucket_name = aws_utility.getBucketName()
-            client = aws_utility.getFileClient()
-            url = "http://%s.%s" % (bucket_name, client.connection.server)
-
             filename_prefix = aws_utility.getAWSFilenamePrefix()
             if filename_prefix:
-                url = '%s/%s' % (url, filename_prefix)
+                url = '%s/%s' % (self.get_domain, filename_prefix)
 
             url = '%s/%s' % (url, sid)
         else:

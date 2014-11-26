@@ -28,11 +28,14 @@ class AWSFileClientUtility(object):
         aws_seecret_key = awsconf_sheet.getProperty('AWS_SEECRET_KEY')
         aws_bucket_name = awsconf_sheet.getProperty('AWS_BUCKET_NAME')
         aws_filename_prefix = awsconf_sheet.getProperty('AWS_FILENAME_PREFIX')
+        alt_cdn_domain = awsconf_sheet.getProperty(
+            'ALTERNATIVE_CDN_DOMAIN', None)
 
         return {'aws_key_id': aws_key_id,
                 'aws_seecret_key': aws_seecret_key,
                 'aws_bucket_name': aws_bucket_name,
-                'aws_filename_prefix': aws_filename_prefix}
+                'aws_filename_prefix': aws_filename_prefix,
+                'cdn_domain': alt_cdn_domain}
 
     def getBucketName(self):
         return self.getAWSConfiguration()['aws_bucket_name']
@@ -49,5 +52,8 @@ class AWSFileClientUtility(object):
             config['aws_bucket_name'],
             aws_filename_prefix=config['aws_filename_prefix'])
         return client
+
+    def get_alt_cdn_domain(self):
+        return self.getAWSConfiguration()['alt_cdn_domain']
 
 aws_utility = AWSFileClientUtility()
