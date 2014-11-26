@@ -5,15 +5,16 @@ from collective.contentfiles2aws.config import PROJECTNAME
 
 DEFAULT_PROFILE = 'profile-%s:default' % PROJECTNAME
 
-def upgrade_step(upgrade_product, version): 
+
+def upgrade_step(upgrade_product, version):
     """Decorator for updating the QuickInstaller of a upgrade"""
     def wrap_func(fn):
-        def wrap_func_args(context,*args, **kw):
-            p = getToolByName(context, 'portal_quickinstaller'
-                ).get(upgrade_product)
+        def wrap_func_args(context, *args, **kw):
+            p = getToolByName(context,
+                              'portal_quickinstaller').get(upgrade_product)
             print "%s: Upgrading to %s" % (upgrade_product, version)
             setattr(p, 'installedversion', version)
-            return fn(context,*args, **kw)
+            return fn(context, *args, **kw)
         return wrap_func_args
     return wrap_func
 
@@ -21,3 +22,9 @@ def upgrade_step(upgrade_product, version):
 @upgrade_step(PROJECTNAME, '1.0')
 def upgrade_to_1_0(context):
     context.runImportStepFromProfile(DEFAULT_PROFILE, 'catalog')
+
+
+@upgrade_step(PROJECTNAME, '1.3.0')
+def upgrade_to_1_3_0(context):
+    context.runImportStepFromProfile(DEFAULT_PROFILE, 'propertiestool',
+                                     run_dependencies=False)
