@@ -51,7 +51,7 @@ class AWSStorage(AnnotationStorage):
     def update_source(self, file_, data, instance,
                       filename, content_type, width, height):
         aws_utility = getUtility(IAWSFileClientUtility)
-        as3client = aws_utility.getFileClient()
+        as3client = aws_utility.get_file_client()
         if file_.source_id:
             as3client.delete(file_.source_id)
 

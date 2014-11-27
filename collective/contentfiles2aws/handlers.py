@@ -36,7 +36,7 @@ def remove_source(obj):
            raise AWSSourceRemoveError("Could not delete remote source. "
                                       "To be able to delete object properly, "
                                       "please activate AWS storage")
-       as3client = aws_utility.getFileClient()
+       as3client = aws_utility.get_file_client()
        if hasattr(value, 'source_id') and value.source_id:
            try:
                as3client.delete(value.source_id)
@@ -62,7 +62,7 @@ def clone_source(obj):
             # source already cloned
             return
 
-        as3client = aws_utility.getFileClient()
+        as3client = aws_utility.get_file_client()
         as3client.copy_source(old_sid, new_sid)
         aws_file.source_id = new_sid
 

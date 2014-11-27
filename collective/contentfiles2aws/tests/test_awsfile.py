@@ -45,7 +45,7 @@ class AWSFileTestCase(unittest2.TestCase):
         """ Test remove_source method."""
         self.aws_file.remove_source()
         aws_utility = getUtility(IAWSFileClientUtility)
-        as3client = aws_utility.getFileClient()
+        as3client = aws_utility.get_file_client()
         self.assert_(not as3client.get(self.aws_file.source_id))
 
 

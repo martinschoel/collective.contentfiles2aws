@@ -61,7 +61,7 @@ class AWSStorageTestCase(unittest2.TestCase):
                                    height='150')
 
         aws_utility = getUtility(IAWSFileClientUtility)
-        as3client = aws_utility.getFileClient()
+        as3client = aws_utility.get_file_client()
         self.assertEqual(as3client.get(self.aws_file.source_id), 'new text')
         self.assert_(self.aws_file.filename, 'newfilename.gif')
         self.assert_(self.aws_file.content_type, 'image/gif')

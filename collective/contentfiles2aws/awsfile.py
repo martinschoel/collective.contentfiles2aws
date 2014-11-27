@@ -42,7 +42,7 @@ class AWSFile(File):
             return self.__dict__['data']
 
         aws_utility = getUtility(IAWSFileClientUtility)
-        as3client = aws_utility.getFileClient()
+        as3client = aws_utility.get_file_client()
         if self.source_id:
             try:
                 return as3client.get(self.source_id)
@@ -76,7 +76,7 @@ class AWSFile(File):
 
     def remove_source(self):
         aws_utility = getUtility(IAWSFileClientUtility)
-        as3client = aws_utility.getFileClient()
+        as3client = aws_utility.get_file_client()
         if self.source_id:
             as3client.delete(self.source_id)
 

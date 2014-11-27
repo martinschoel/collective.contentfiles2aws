@@ -5,6 +5,6 @@ class IAWSFileClientUtility(Interface):
     """
     """
 
-    def getFileClient():
+    def get_file_client():
         """
         """
