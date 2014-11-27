@@ -72,8 +72,7 @@ class AWSFile(File):
 
     def absolute_url(self):
         aws_utility = getUtility(IAWSFileClientUtility)
-        as3client = aws_utility.getFileClient()
-        return as3client.source_url(self.source_id)
+        return aws_utility.get_source_url(self.source_id)
 
     def remove_source(self):
         aws_utility = getUtility(IAWSFileClientUtility)
