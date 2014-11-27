@@ -54,6 +54,6 @@ class AWSFileClientUtility(object):
         return client
 
     def get_alt_cdn_domain(self):
-        return self.getAWSConfiguration()['alt_cdn_domain']
+        return self.getAWSConfiguration()['cdn_domain']
 
 aws_utility = AWSFileClientUtility()
