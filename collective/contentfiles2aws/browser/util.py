@@ -24,7 +24,7 @@ class AWSUtilView(BrowserView):
 
         cdn = utility.get_alt_cdn_domain()
         if cdn:
-            url = 'http://%s/' % cdn
+            url = 'http://%s' % cdn
 
         return url
 
@@ -38,7 +38,7 @@ class AWSUtilView(BrowserView):
             aws_utility = getUtility(IAWSFileClientUtility)
             filename_prefix = aws_utility.getAWSFilenamePrefix()
             if filename_prefix:
-                url = '%s/%s' % (self.get_domain, filename_prefix)
+                url = '%s/%s' % (self.get_domain(), filename_prefix)
 
             url = '%s/%s' % (url, sid)
         else:
