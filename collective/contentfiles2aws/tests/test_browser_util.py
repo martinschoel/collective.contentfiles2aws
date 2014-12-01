@@ -3,9 +3,6 @@ import unittest2
 
 from zope.component import getMultiAdapter
 
-from Products.CMFCore.utils import getToolByName
-from ZODB.POSException import ConflictError
-
 from collective.contentfiles2aws.testing import \
     AWS_CONTENT_FILES_INTEGRATION_TESTING
 
@@ -15,7 +12,7 @@ from collective.contentfiles2aws.tests.test_catalog import createScales
 class AWSIndexersTestCase(unittest2.TestCase):
     """ AWSINdexers test case. """
 
-    layer =  AWS_CONTENT_FILES_INTEGRATION_TESTING
+    layer = AWS_CONTENT_FILES_INTEGRATION_TESTING
 
     def _get_image(self):
         dir_name = os.path.dirname(os.path.abspath(__file__))
@@ -23,7 +20,7 @@ class AWSIndexersTestCase(unittest2.TestCase):
 
     def patch_scale_creation(self):
         from Products.Archetypes.Field import ImageField
-        ImageField.createScales= createScales
+        ImageField.createScales = createScales
 
     def create_test_image(self):
         self.conf_sheet._updateProperty('AWS_BUCKET_NAME', 'contentfiles')
@@ -35,7 +32,7 @@ class AWSIndexersTestCase(unittest2.TestCase):
 
     def setUp(self):
         self.portal = self.layer['portal']
-        self.conf_sheet=self.portal.portal_properties.contentfiles2aws
+        self.conf_sheet = self.portal.portal_properties.contentfiles2aws
 
     def test_aws_image_url(self):
         """ This specific test was made to cover issue #1444.
@@ -53,9 +50,47 @@ class AWSIndexersTestCase(unittest2.TestCase):
 
         obj_brain = portal.portal_catalog(id='aws_image')[0]
         aws_image_url = getMultiAdapter((portal, request),
-                                        name = 'aws_image_url')
+                                        name='aws_image_url')
         self.assertEqual(aws_image_url(obj_brain, scale='tile'),
                          'http://nohost/plone/aws_image/image_tile')
+
+    def test_getUrlFromBrain(self):
+        portal = self.layer['portal']
+        request = self.layer['request']
+        self.create_test_image()
+
+        aws_image_url = getMultiAdapter((portal, request),
+                                        name='aws_image_url')
+        image = getattr(self.portal, 'aws_image')
+        obj_brain = portal.portal_catalog(id='aws_image')[0]
+        self.assertEqual(
+            aws_image_url(obj_brain),
+            'http://contentfiles.s3.amazonaws.com/%s' %
+            (image.getImage().source_id))
+
+        self.conf_sheet._updateProperty('ALTERNATIVE_CDN_DOMAIN', 'cdn.ch.com')
+        self.assertEqual(
+            aws_image_url(obj_brain),
+            'http://cdn.ch.com/%s' %
+            (image.getImage().source_id))
+
+    def test_getUrlFromObject(self):
+        portal = self.layer['portal']
+        request = self.layer['request']
+        self.create_test_image()
+
+        aws_image_url = getMultiAdapter((portal, request),
+                                        name='aws_image_url')
+        image = getattr(self.portal, 'aws_image')
+        self.assertEqual(
+            aws_image_url(image, brain=False),
+            'http://contentfiles.s3.amazonaws.com/%s' %
+            (image.getImage().source_id))
+
+        self.conf_sheet._updateProperty('ALTERNATIVE_CDN_DOMAIN', 'cdn.ch.com')
+        self.assertEqual(
+            aws_image_url(image, brain=False),
+            'http://cdn.ch.com/%s' % (image.getImage().source_id))
 
 
 def test_suite():
