@@ -1,16 +1,14 @@
 from setuptools import setup, find_packages
 import os
 
-version = '1.2.1'
+version = '1.3.0'
 
 setup(name='collective.contentfiles2aws',
       version=version,
       description="Allows to store files and images on amazon s3 service.",
       long_description=open("README.txt").read() + "\n" +
-                       open(os.path.join("docs", "HISTORY.txt")).read(),
-      classifiers=[
-        "Programming Language :: Python",
-        ],
+      open(os.path.join("docs", "HISTORY.txt")).read(),
+      classifiers=["Programming Language :: Python"],
       keywords='Plone AWS',
       author='Taras Melnychuk',
       author_email='melnychuktaras@gmail.com',
@@ -24,7 +22,7 @@ setup(name='collective.contentfiles2aws',
           'setuptools',
           'boto',
       ],
-      extras_require = {'tests': ['plone.app.testing',]},
+      extras_require={'tests': ['plone.app.testing']},
       entry_points="""
       # -*- Entry points: -*-
       [z3c.autoinclude.plugin]

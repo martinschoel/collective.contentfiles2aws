@@ -1,6 +1,13 @@
 Changelog
 =========
 
+1.3.0 - December 12, 2014
+-------------------------
+
+ - Added ability to use alternative cdn domain for aws files.
+   [Taras Melnychuk]
+
+
 1.2.1 - July 2, 2014
 --------------------
 
