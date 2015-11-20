@@ -6,7 +6,9 @@
   <property name="AWS_SEECRET_KEY" type="string" purge="False"></property>
   <property name="AWS_BUCKET_NAME" type="string" purge="False"></property>
   <property name="AWS_FILENAME_PREFIX" type="string" purge="False"></property>
-  <property name="ALTERNATIVE_CDN_DOMAIN" type="string"></property>
+  <property name="ALTERNATIVE_CDN_DOMAIN" type="string" purge="False"></property>
+  <property name="USE_LOCAL_STORAGE" type="boolean" purge="False">False</property>
+  <property name="LOCAL_STORAGE_PATH" type="string" purge="Flase"></property>
  </object>
  <object name="site_properties" meta_type="Plone Property Sheet">
   <property name="typesUseViewActionInListings" type="lines" purge="False">
