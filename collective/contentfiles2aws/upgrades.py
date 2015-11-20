@@ -28,3 +28,9 @@ def upgrade_to_1_0(context):
 def upgrade_to_1_3_0(context):
     context.runImportStepFromProfile(DEFAULT_PROFILE, 'propertiestool',
                                      run_dependencies=False)
+
+
+@upgrade_step(PROJECTNAME, '1.4.0')
+def upgrade_to_1_4_0(context):
+    context.runImportStepFromProfile(DEFAULT_PROFILE, 'propertiestool',
+                                     run_dependencies=False)
