@@ -18,6 +18,21 @@ class AWSFileClientUtility(object):
         awsconf_sheet = getattr(pp, AWSCONF_SHEET)
         return awsconf_sheet.getProperty('USE_AWS')
 
+    def parse_metadata(self, metadata):
+        """ Parse metadata lines.
+
+        Parse metadata lines and returns metadata dictionary.
+        Metadata lines that are not properly formatted (without separator)
+        will be ignored.
+
+        :param metadata: metadata strings
+        :type metadata: list
+        :returns: dict
+        """
+
+        return dict([row.split("|") for row in metadata
+                     if row.find("|") != -1])
+
     def get_configuration(self):
         """ Collect configuration infomation for aws client. """
         # TODO: temporary we will save configuration in property sheet.
@@ -32,6 +47,8 @@ class AWSFileClientUtility(object):
         local_storage_path = awsconf_sheet.getProperty("LOCAL_STORAGE_PATH")
         alt_cdn_domain = awsconf_sheet.getProperty(
             "ALTERNATIVE_CDN_DOMAIN", None)
+        default_metadata = self.parse_metadata(
+            awsconf_sheet.getProperty("DEFAULT_METADATA", []))
 
         return {"aws_key_id": aws_key_id,
                 "aws_seecret_key": aws_seecret_key,
@@ -39,7 +56,8 @@ class AWSFileClientUtility(object):
                 "aws_filename_prefix": aws_filename_prefix,
                 'cdn_domain': alt_cdn_domain,
                 "use_local_storage": use_local_storage,
-                "local_storage_path": local_storage_path}
+                "local_storage_path": local_storage_path,
+                "default_metadata": default_metadata}
 
     def get_bucket_name(self):
         return self.get_configuration()['aws_bucket_name']
@@ -57,7 +75,8 @@ class AWSFileClientUtility(object):
                 config["aws_key_id"],
                 config["aws_seecret_key"],
                 config["aws_bucket_name"],
-                aws_filename_prefix=config["aws_filename_prefix"])
+                aws_filename_prefix=config["aws_filename_prefix"],
+                deafult_metadata=config["default_metadata"])
         return client
 
     def get_alt_cdn_domain(self):
