@@ -76,7 +76,7 @@ class AWSFileClientUtility(object):
                 config["aws_seecret_key"],
                 config["aws_bucket_name"],
                 aws_filename_prefix=config["aws_filename_prefix"],
-                deafult_metadata=config["default_metadata"])
+                default_metadata=config["default_metadata"])
         return client
 
     def get_alt_cdn_domain(self):

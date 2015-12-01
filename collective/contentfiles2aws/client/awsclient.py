@@ -124,7 +124,7 @@ class AWSFileClient(object):
                                      "attachment; filename*=UTF-8''%s" % fname)
             # set additional metadata
             if kw:
-                for k, v in kw:
+                for k, v in kw.items():
                     key.set_metadata(k, v)
 
             key.set_contents_from_string(data)
