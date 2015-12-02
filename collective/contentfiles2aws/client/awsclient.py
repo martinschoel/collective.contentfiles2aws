@@ -35,12 +35,12 @@ class AWSFileClient(object):
 
     implements(IAWSFileClient)
 
-    def __init__(self, aws_key_id, aws_seecret_key, bucket_name,
+    def __init__(self, aws_key_id, aws_secret_key, bucket_name,
                  aws_filename_prefix=None, default_metadata={}):
         self._aws_key_id = aws_key_id
-        self._aws_seecret_key = aws_seecret_key
+        self._aws_secret_key = aws_secret_key
         self.bucket_name = bucket_name
-        self.connection = S3Connection(aws_key_id, aws_seecret_key)
+        self.connection = S3Connection(aws_key_id, aws_secret_key)
         self.aws_filename_prefix = aws_filename_prefix
         self.default_metadata = default_metadata
 
@@ -125,7 +125,8 @@ class AWSFileClient(object):
             # set additional metadata
             if kw:
                 for k, v in kw.items():
-                    key.set_metadata(k, v)
+                    if v:
+                        key.set_metadata(k, v)
 
             key.set_contents_from_string(data)
             key.set_acl('public-read')
