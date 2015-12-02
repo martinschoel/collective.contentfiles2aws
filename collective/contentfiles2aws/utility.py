@@ -4,21 +4,30 @@ from zope.app.component.hooks import getSite
 from Products.CMFCore.utils import getToolByName
 
 from collective.contentfiles2aws.client import AWSFileClient, FSFileClient
-from collective.contentfiles2aws.interfaces import IAWSFileClientUtility
-from collective.contentfiles2aws.config import AWSCONF_SHEET
+from collective.contentfiles2aws.interfaces import IFileStorageUtility
+from collective.contentfiles2aws import config
 
 
-class AWSFileClientUtility(object):
+class FileStorageUtility(object):
+
+    """ File storage utility.
+
+    For more information please see interface definition.
+
     """
-    """
-    implements(IAWSFileClientUtility)
 
-    def active(self):
-        pp = getToolByName(getSite(), 'portal_properties')
-        awsconf_sheet = getattr(pp, AWSCONF_SHEET)
-        return awsconf_sheet.getProperty('USE_AWS')
+    implements(IFileStorageUtility)
 
-    def parse_metadata(self, metadata):
+    def _get_settings(self):
+        """ Collects settings. """
+
+        pp = getToolByName(getSite(), "portal_properties")
+        awsconf_sheet = getattr(pp, config.AWSCONF_SHEET)
+
+        return dict([(pname.lower(), awsconf_sheet.getProperty(pname))
+                     for pname in config.AWS_CONF_PROP_NAMES])
+
+    def _parse_metadata(self, metadata):
         """ Parse metadata lines.
 
         Parse metadata lines and returns metadata dictionary.
@@ -33,68 +42,33 @@ class AWSFileClientUtility(object):
         return dict([row.split("|") for row in metadata
                      if row.find("|") != -1])
 
-    def get_configuration(self):
-        """ Collect configuration infomation for aws client. """
-        # TODO: temporary we will save configuration in property sheet.
-        #      it will be good to have more flexible solution for this.
-        pp = getToolByName(getSite(), "portal_properties")
-        awsconf_sheet = getattr(pp, AWSCONF_SHEET)
-        aws_key_id = awsconf_sheet.getProperty("AWS_KEY_ID")
-        aws_seecret_key = awsconf_sheet.getProperty("AWS_SEECRET_KEY")
-        aws_bucket_name = awsconf_sheet.getProperty("AWS_BUCKET_NAME")
-        aws_filename_prefix = awsconf_sheet.getProperty("AWS_FILENAME_PREFIX")
-        use_local_storage = awsconf_sheet.getProperty("USE_LOCAL_STORAGE")
-        local_storage_path = awsconf_sheet.getProperty("LOCAL_STORAGE_PATH")
-        alt_cdn_domain = awsconf_sheet.getProperty(
-            "ALTERNATIVE_CDN_DOMAIN", None)
-        default_metadata = self.parse_metadata(
-            awsconf_sheet.getProperty("DEFAULT_METADATA", []))
+    def _get_bucket_name(self):
+        return self._get_settings()['aws_bucket_name']
 
-        return {"aws_key_id": aws_key_id,
-                "aws_seecret_key": aws_seecret_key,
-                "aws_bucket_name": aws_bucket_name,
-                "aws_filename_prefix": aws_filename_prefix,
-                'cdn_domain': alt_cdn_domain,
-                "use_local_storage": use_local_storage,
-                "local_storage_path": local_storage_path,
-                "default_metadata": default_metadata}
+    def _get_filename_prefix(self):
+        return self._get_settings()['aws_filename_prefix']
 
-    def get_bucket_name(self):
-        return self.get_configuration()['aws_bucket_name']
+    def _get_alt_domain(self):
+        return self._get_settings()['alt_domain']
 
-    def get_filename_prefix(self):
-        return self.get_configuration()['aws_filename_prefix']
-
-    def get_file_client(self):
-        """ Provide an aws file client. """
-        config = self.get_configuration()
-        if config["use_local_storage"]:
-            client = FSFileClient(config["local_storage_path"])
-        else:
-            client = AWSFileClient(
-                config["aws_key_id"],
-                config["aws_seecret_key"],
-                config["aws_bucket_name"],
-                aws_filename_prefix=config["aws_filename_prefix"],
-                default_metadata=config["default_metadata"])
-        return client
-
-    def get_alt_cdn_domain(self):
-        return self.get_configuration()['cdn_domain']
-
-    def get_domain(self):
+    def _get_domain(self):
         """ Gets domain.
 
-        If cdn domain is specified then it will return it. Otherwise
+        If alt domain is specified then it will return it. Otherwise
         default s3 domain will be build.
         """
 
-        domain = self.get_alt_cdn_domain()
-        if not domain:
-            domain = "%s.%s" % (self.get_bucket_name(),
-                                self.get_file_client().connection.server)
+        if self.active():
+            domain = self._get_alt_domain()
+            if not domain:
+                settings = self._get_settings()
+                active_storage = settings[config.ACTIVE_STORAGE_PNAME.lower()]
+                if active_storage == config.AWS_STORAGE:
+                    domain = "%s.%s" % (
+                        self._get_bucket_name(),
+                        self.get_file_client().connection.server)
 
-        return domain
+            return domain
 
     def get_url_prefix(self):
         """ Build url prefix.
@@ -102,12 +76,20 @@ class AWSFileClientUtility(object):
         This url prefix includes domain (cdn or default) and file name prefix
         if it was specified in aws configuration.
         """
-        url = "http://%s" % self.get_domain()
-        prefix = self.get_filename_prefix()
-        if prefix:
-                url = '%s/%s' % (url, prefix)
 
-        return url
+        if self.active():
+            domain = self._get_domain()
+            if domain:
+                url = "http://%s" % domain
+
+                prefix = self._get_filename_prefix()
+                if prefix:
+                    settings = self._get_settings()
+                    storage = settings[config.ACTIVE_STORAGE_PNAME.lower()]
+                    if storage == config.AWS_STORAGE:
+                        url = '%s/%s' % (url, prefix)
+
+                return url
 
     def get_source_url(self, source_id):
         """ Build source url based on source id.
@@ -117,6 +99,45 @@ class AWSFileClientUtility(object):
         :type source_id: string
         """
 
-        return "%s/%s" % (self.get_url_prefix(), source_id)
+        if self.active():
+            prefix = self.get_url_prefix()
+            if prefix:
+                return "%s/%s" % (prefix, source_id)
 
-aws_utility = AWSFileClientUtility()
+    def active(self):
+        """ Checks if file storage is active.
+
+        Checks configuration and return false if remote storages is disabled.
+        If file system storage is enabled or aws storage is enabled returns
+        true.
+        """
+
+        settings = self._get_settings()
+        active_storage = settings[config.ACTIVE_STORAGE_PNAME.lower()]
+        return active_storage in config.STORAGES
+
+    def get_file_client(self):
+        """ Provides file client.
+
+        Checks current settings and provide file client accordingly.
+        """
+
+        client = None
+        settings = self._get_settings()
+        active_storage = settings[config.ACTIVE_STORAGE_PNAME.lower()]
+
+        if active_storage == config.AWS_STORAGE:
+            client = AWSFileClient(
+                settings["aws_key_id"],
+                settings["aws_secret_key"],
+                settings["aws_bucket_name"],
+                aws_filename_prefix=settings["aws_filename_prefix"],
+                default_metadata=self._parse_metadata(
+                    settings["default_metadata"]))
+        elif active_storage == config.FS_STORAGE:
+            client = FSFileClient(settings["fs_storage_path"])
+
+        return client
+
+
+fsutility = FileStorageUtility()
