@@ -17,7 +17,7 @@ from Products.Archetypes.interfaces import IReferenceable
 from plone.i18n.normalizer.interfaces import IIDNormalizer
 
 from collective.contentfiles2aws.awsfile import AWSFile
-from collective.contentfiles2aws.interfaces import IAWSFileClientUtility
+from collective.contentfiles2aws.interfaces import IFileStorageUtility
 from collective.contentfiles2aws.client.fsclient import FileClientStoreError
 from collective.contentfiles2aws.client.fsclient import FileClientRemoveError
 
@@ -50,15 +50,15 @@ class AWSStorage(AnnotationStorage):
 
     def update_source(self, file_, data, instance,
                       filename, content_type, width, height):
-        aws_utility = getUtility(IAWSFileClientUtility)
-        as3client = aws_utility.get_file_client()
+        fsutility = getUtility(IFileStorageUtility)
+        fclient = fsutility.get_file_client()
         if file_.source_id:
-            as3client.delete(file_.source_id)
+            fclient.delete(file_.source_id)
 
         source_id = self.getSourceId(file_.id(), filename,
                                      instance, fresh=True)
-        as3client.put(source_id, data, mimetype=content_type,
-                      original_name=filename)
+        fclient.put(source_id, data, mimetype=content_type,
+                    original_name=filename)
         setattr(file_, 'source_id', source_id)
         setattr(file_, 'size', len(data))
         setattr(file_, 'filename', filename)
@@ -110,8 +110,8 @@ class AWSStorage(AnnotationStorage):
 
     security.declarePrivate('get')
     def get(self, name, instance, **kwargs):
-        aws_utility = getUtility(IAWSFileClientUtility)
-        if not aws_utility.active():
+        fsutility = getUtility(IFileStorageUtility)
+        if not fsutility.active():
             return AnnotationStorage.get(self, name, instance, **kwargs)
 
         file_ = AnnotationStorage.get(self, name, instance, **kwargs)
@@ -143,8 +143,8 @@ class AWSStorage(AnnotationStorage):
         width = getattr(value, 'width', '')
         height = getattr(value, 'height', '')
 
-        aws_utility = getUtility(IAWSFileClientUtility)
-        if not aws_utility.active():
+        fsutility = getUtility(IFileStorageUtility)
+        if not fsutility.active():
             if isinstance(value, AWSFile):
                 # use default OFS.Image or OFS.File
                 if width and height:
@@ -231,8 +231,8 @@ class AWSStorage(AnnotationStorage):
 
     security.declarePrivate('unset')
     def unset(self, name, instance, **kwargs):
-        aws_utility = getUtility(IAWSFileClientUtility)
-        if not aws_utility.active():
+        fsutility = getUtility(IFileStorageUtility)
+        if not fsutility.active():
             return AnnotationStorage.unset(self, name, instance, **kwargs)
 
         file_ = self.get(name, instance, **kwargs)
