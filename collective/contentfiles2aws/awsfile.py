@@ -17,12 +17,12 @@ class AWSFile(File):
     filename = u''
     data = ''
     # for image files
-    height=''
-    width=''
+    height = ''
+    width = ''
 
     security = ClassSecurityInfo()
 
-    def __init__(self, id, size=0,filename=u'', content_type=''):
+    def __init__(self, id, size=0, filename=u'', content_type=''):
         self.__name__ = id
         self.size = size
         self.filename = filename
@@ -88,26 +88,28 @@ class AWSFile(File):
             # this is file not image
             return ''
 
-        if height is None: height=self.height
-        if width is None:  width=self.width
+        if height is None:
+            height = self.height
+        if width is None:
+            width = self.width
 
         # Auto-scaling support
         xdelta = xscale or scale
         ydelta = yscale or scale
 
         if xdelta and width:
-            width =  str(int(round(int(width) * xdelta)))
+            width = str(int(round(int(width) * xdelta)))
         if ydelta and height:
             height = str(int(round(int(height) * ydelta)))
 
-        result='<img src="%s"' % (self.absolute_url())
+        result = '<img src="%s"' % (self.absolute_url())
 
         if alt is None:
-            alt=getattr(self, 'alt', '')
+            alt = getattr(self, 'alt', '')
         result = '%s alt="%s"' % (result, escape(alt, 1))
 
         if title is None:
-            title=getattr(self, 'title', '')
+            title = getattr(self, 'title', '')
         result = '%s title="%s"' % (result, escape(title, 1))
 
         if height:
