@@ -5,7 +5,9 @@ from OFS.Image import File
 from zope.component import getUtility
 
 from collective.contentfiles2aws.awsfile import AWSFile
-from collective.contentfiles2aws.interfaces import IAWSFileClientUtility
+from collective.contentfiles2aws.interfaces import IFileStorageUtility
+from collective.contentfiles2aws.config import ACTIVE_STORAGE_PNAME, \
+    AWS_STORAGE
 from collective.contentfiles2aws.testing import \
     AWS_CONTENT_FILES_INTEGRATION_TESTING
 
@@ -13,7 +15,7 @@ from collective.contentfiles2aws.testing import \
 class AWSStorageTestCase(unittest2.TestCase):
     """ AWS File test case. """
 
-    layer =  AWS_CONTENT_FILES_INTEGRATION_TESTING
+    layer = AWS_CONTENT_FILES_INTEGRATION_TESTING
 
     def _get_image(self):
         dir_name = os.path.dirname(os.path.abspath(__file__))
@@ -23,7 +25,7 @@ class AWSStorageTestCase(unittest2.TestCase):
         self.portal = self.layer['portal']
         # set test bucket name
         self.sheet = self.portal.portal_properties.contentfiles2aws
-        self.sheet._updateProperty('USE_AWS', True)
+        self.sheet._updateProperty(ACTIVE_STORAGE_PNAME, AWS_STORAGE)
         self.sheet._updateProperty('AWS_BUCKET_NAME', 'contentfiles')
 
         id = self.portal.invokeFactory('AWSFile', 'awsfile')
@@ -60,14 +62,14 @@ class AWSStorageTestCase(unittest2.TestCase):
                                    'newfilename.gif', 'image/gif', width='100',
                                    height='150')
 
-        aws_utility = getUtility(IAWSFileClientUtility)
-        as3client = aws_utility.get_file_client()
+        fsutility = getUtility(IFileStorageUtility)
+        as3client = fsutility.get_file_client()
         self.assertEqual(as3client.get(self.aws_file.source_id), 'new text')
         self.assert_(self.aws_file.filename, 'newfilename.gif')
         self.assert_(self.aws_file.content_type, 'image/gif')
 
     def test_do_migrate(self):
-        self.sheet._updateProperty('USE_AWS', False)
+        self.sheet._updateProperty(ACTIVE_STORAGE_PNAME, AWS_STORAGE)
 
         id = self.portal.invokeFactory('AWSFile', 'file')
         file_ = getattr(self.portal, id)
@@ -79,7 +81,7 @@ class AWSStorageTestCase(unittest2.TestCase):
     def test_get(self):
         self.assertEqual(self.aws_file, self.storage.get('file', self.awsfile))
 
-        self.sheet._updateProperty('USE_AWS', False)
+        self.sheet._updateProperty(ACTIVE_STORAGE_PNAME, AWS_STORAGE)
         id = self.portal.invokeFactory('AWSFile', 'file')
         file_ = getattr(self.portal, id)
         file_.update(file=self._get_image())
@@ -88,12 +90,12 @@ class AWSStorageTestCase(unittest2.TestCase):
 
         self.assert_(isinstance(file__, File))
 
-        self.sheet._updateProperty('USE_AWS', True)
+        self.sheet._updateProperty(ACTIVE_STORAGE_PNAME, AWS_STORAGE)
         file_.REQUEST['file_migrate'] = True
         self.assert_(isinstance(storage.get('file', file_), AWSFile))
 
     def test_set(self):
-        self.sheet._updateProperty('USE_AWS', False)
+        self.sheet._updateProperty(ACTIVE_STORAGE_PNAME, AWS_STORAGE)
         id = self.portal.invokeFactory('AWSFile', 'file')
         file_ = getattr(self.portal, id)
         storage = file_.schema['file'].storage
@@ -103,7 +105,7 @@ class AWSStorageTestCase(unittest2.TestCase):
         storage.set('file', file_, ofsfile)
         self.assert_(storage.get('file', file_), File)
 
-        self.sheet._updateProperty('USE_AWS', True)
+        self.sheet._updateProperty(ACTIVE_STORAGE_PNAME, AWS_STORAGE)
         self.assert_(storage.get('file', file_), AWSFile)
 
     def test_unset(self):
@@ -118,6 +120,7 @@ class AWSStorageTestCase(unittest2.TestCase):
 
         storage.unset('file', file_)
         self.assertRaises(AttributeError, storage.get, 'file', file_)
+
 
 def test_suite():
     suite = unittest2.TestSuite()

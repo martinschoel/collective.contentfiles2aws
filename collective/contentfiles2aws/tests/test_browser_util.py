@@ -6,6 +6,8 @@ from zope.component import getMultiAdapter
 from collective.contentfiles2aws.testing import \
     AWS_CONTENT_FILES_INTEGRATION_TESTING
 
+from collective.contentfiles2aws.config import ACTIVE_STORAGE_PNAME, \
+    AWS_STORAGE
 from collective.contentfiles2aws.tests.test_catalog import createScales
 
 
@@ -24,7 +26,7 @@ class AWSIndexersTestCase(unittest2.TestCase):
 
     def create_test_image(self):
         self.conf_sheet._updateProperty('AWS_BUCKET_NAME', 'contentfiles')
-        self.conf_sheet._updateProperty('USE_AWS', True)
+        self.conf_sheet._updateProperty(ACTIVE_STORAGE_PNAME, AWS_STORAGE)
 
         fid = self.portal.invokeFactory('AWSImage', 'aws_image')
         aws_image = getattr(self.portal, fid)
@@ -68,7 +70,7 @@ class AWSIndexersTestCase(unittest2.TestCase):
             'http://contentfiles.s3.amazonaws.com/%s' %
             (image.getImage().source_id))
 
-        self.conf_sheet._updateProperty('ALTERNATIVE_CDN_DOMAIN', 'cdn.ch.com')
+        self.conf_sheet._updateProperty('ALT_DOMAIN', 'cdn.ch.com')
         self.assertEqual(
             aws_image_url(obj_brain),
             'http://cdn.ch.com/%s' %
@@ -87,7 +89,7 @@ class AWSIndexersTestCase(unittest2.TestCase):
             'http://contentfiles.s3.amazonaws.com/%s' %
             (image.getImage().source_id))
 
-        self.conf_sheet._updateProperty('ALTERNATIVE_CDN_DOMAIN', 'cdn.ch.com')
+        self.conf_sheet._updateProperty('ALT_DOMAIN', 'cdn.ch.com')
         self.assertEqual(
             aws_image_url(image, brain=False),
             'http://cdn.ch.com/%s' % (image.getImage().source_id))

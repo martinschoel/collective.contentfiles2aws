@@ -3,6 +3,8 @@ import unittest2
 
 from Products.CMFCore.utils import getToolByName
 
+from collective.contentfiles2aws.config import ACTIVE_STORAGE_PNAME, \
+    AWS_STORAGE
 from collective.contentfiles2aws.testing import \
     AWS_CONTENT_FILES_INTEGRATION_TESTING
 
@@ -39,7 +41,7 @@ class AWSImageTestCase(unittest2.TestCase):
 
     def test_AWSImageCreation(self):
         self.conf_sheet._updateProperty('AWS_BUCKET_NAME', 'contentfiles')
-        self.conf_sheet._updateProperty('USE_AWS', True)
+        self.conf_sheet._updateProperty(ACTIVE_STORAGE_PNAME, AWS_STORAGE)
 
         fid = self.portal.invokeFactory('AWSImage', 'aws_image')
         aws_image = getattr(self.portal, fid)

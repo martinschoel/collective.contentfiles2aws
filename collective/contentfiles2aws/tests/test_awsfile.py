@@ -3,7 +3,9 @@ import unittest2
 
 from zope.component import getUtility
 
-from collective.contentfiles2aws.interfaces import IAWSFileClientUtility
+from collective.contentfiles2aws.interfaces import IFileStorageUtility
+from collective.contentfiles2aws.config import ACTIVE_STORAGE_PNAME, \
+    AWS_STORAGE
 from collective.contentfiles2aws.testing import \
     AWS_CONTENT_FILES_INTEGRATION_TESTING
 
@@ -20,7 +22,7 @@ class AWSFileTestCase(unittest2.TestCase):
     def setUp(self):
         portal = self.layer['portal']
         sheet = portal.portal_properties.contentfiles2aws
-        sheet._updateProperty('USE_AWS', True)
+        sheet._updateProperty(ACTIVE_STORAGE_PNAME, AWS_STORAGE)
         sheet._updateProperty('AWS_BUCKET_NAME', 'contentfiles')
 
         id = portal.invokeFactory('AWSFile', 'awsfile')
@@ -44,7 +46,7 @@ class AWSFileTestCase(unittest2.TestCase):
     def test_remove_source(self):
         """ Test remove_source method."""
         self.aws_file.remove_source()
-        aws_utility = getUtility(IAWSFileClientUtility)
+        aws_utility = getUtility(IFileStorageUtility)
         as3client = aws_utility.get_file_client()
         self.assert_(not as3client.get(self.aws_file.source_id))
 

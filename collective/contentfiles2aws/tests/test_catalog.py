@@ -4,6 +4,8 @@ import unittest2
 from Products.CMFCore.utils import getToolByName
 from ZODB.POSException import ConflictError
 
+from collective.contentfiles2aws.config import ACTIVE_STORAGE_PNAME, \
+    AWS_STORAGE, STORAGE_OFF
 from collective.contentfiles2aws.testing import \
     AWS_CONTENT_FILES_INTEGRATION_TESTING
 
@@ -15,16 +17,17 @@ except ImportError:
     # no PIL, no scaled versions!
     log("Warning: no Python Imaging Libraries (PIL) found."+\
         "Archetypes based ImageField's don't scale if neccessary.")
-    HAS_PIL=False
+    HAS_PIL = False
     PIL_ALGO = None
 else:
-    HAS_PIL=True
+    HAS_PIL = True
     PIL_ALGO = PIL.Image.ANTIALIAS
+
 
 def createScales(self, instance, value=_marker):
     """creates the scales and save them
     """
-    #import pdb; pdb.set_trace()
+    # import pdb; pdb.set_trace()
     sizes = self.getAvailableSizes(instance)
     if not HAS_PIL or not sizes:
         return
@@ -44,7 +47,7 @@ def createScales(self, instance, value=_marker):
     filename = self.getFilename(instance)
 
     for n, size in sizes.items():
-        if size == (0,0):
+        if size == (0, 0):
             continue
         w, h = size
         id = self.getName() + "_" + n
@@ -64,12 +67,13 @@ def createScales(self, instance, value=_marker):
         mimetype = 'image/%s' % format.lower()
         if n == 'tile':
             pp = getToolByName(instance, 'portal_properties')
-            pp.contentfiles2aws._updateProperty('USE_AWS', False)
+            pp.contentfiles2aws._updateProperty(ACTIVE_STORAGE_PNAME,
+                                                STORAGE_OFF)
         image = self._make_image(id, title=self.getName(), file=imgdata,
                                  content_type=mimetype, instance=instance)
         # nice filename: filename_sizename.ext
-        #fname = "%s_%s%s" % (filename, n, ext)
-        #image.filename = fname
+        # fname = "%s_%s%s" % (filename, n, ext)
+        # image.filename = fname
         image.filename = filename
         try:
             delattr(image, 'title')
@@ -80,12 +84,14 @@ def createScales(self, instance, value=_marker):
                                       mimetype=mimetype, filename=filename)
         if n == 'tile':
             pp = getToolByName(instance, 'portal_properties')
-            pp.contentfiles2aws._updateProperty('USE_AWS', True)
+            pp.contentfiles2aws._updateProperty(ACTIVE_STORAGE_PNAME,
+                                                AWS_STORAGE)
+
 
 class AWSIndexersTestCase(unittest2.TestCase):
     """ AWSINdexers test case. """
 
-    layer =  AWS_CONTENT_FILES_INTEGRATION_TESTING
+    layer = AWS_CONTENT_FILES_INTEGRATION_TESTING
 
     def _get_image(self):
         dir_name = os.path.dirname(os.path.abspath(__file__))
@@ -93,11 +99,11 @@ class AWSIndexersTestCase(unittest2.TestCase):
 
     def patch_scale_creation(self):
         from Products.Archetypes.Field import ImageField
-        ImageField.createScales= createScales
+        ImageField.createScales = createScales
 
     def create_test_image(self):
         self.conf_sheet._updateProperty('AWS_BUCKET_NAME', 'contentfiles')
-        self.conf_sheet._updateProperty('USE_AWS', True)
+        self.conf_sheet._updateProperty(ACTIVE_STORAGE_PNAME, AWS_STORAGE)
 
         fid = self.portal.invokeFactory('AWSImage', 'aws_image')
         aws_image = getattr(self.portal, fid)
@@ -105,7 +111,7 @@ class AWSIndexersTestCase(unittest2.TestCase):
 
     def setUp(self):
         self.portal = self.layer['portal']
-        self.conf_sheet=self.portal.portal_properties.contentfiles2aws
+        self.conf_sheet = self.portal.portal_properties.contentfiles2aws
 
     def test_aws_sources(self):
         """ This specific test was made to cover issue #1444.
