@@ -6,7 +6,7 @@ from AccessControl.Permissions import view as View
 
 from zope.component import getUtility
 
-from collective.contentfiles2aws.interfaces import IAWSFileClientUtility
+from collective.contentfiles2aws.interfaces import IFileStorageUtility
 from collective.contentfiles2aws.client.fsclient import FileClientRetrieveError
 
 
@@ -41,11 +41,11 @@ class AWSFile(File):
         if 'data' in self.__dict__ and self.__dict__['data']:
             return self.__dict__['data']
 
-        aws_utility = getUtility(IAWSFileClientUtility)
-        as3client = aws_utility.get_file_client()
+        fsutility = getUtility(IFileStorageUtility)
+        fclient = fsutility.get_file_client()
         if self.source_id:
             try:
-                return as3client.get(self.source_id)
+                return fclient.get(self.source_id)
             except FileClientRetrieveError:
                 return ''
 
@@ -71,12 +71,12 @@ class AWSFile(File):
         return RESPONSE.redirect(self.absolute_url())
 
     def absolute_url(self):
-        aws_utility = getUtility(IAWSFileClientUtility)
-        return aws_utility.get_source_url(self.source_id)
+        fsutility = getUtility(IFileStorageUtility)
+        return fsutility.get_source_url(self.source_id)
 
     def remove_source(self):
-        aws_utility = getUtility(IAWSFileClientUtility)
-        as3client = aws_utility.get_file_client()
+        fsutility = getUtility(IFileStorageUtility)
+        as3client = fsutility.get_file_client()
         if self.source_id:
             as3client.delete(self.source_id)
 
