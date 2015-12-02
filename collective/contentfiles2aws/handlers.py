@@ -10,18 +10,21 @@ from Products.statusmessages.interfaces import IStatusMessage
 
 from collective.contentfiles2aws import utils
 from collective.contentfiles2aws import MFactory as _
-from collective.contentfiles2aws.interfaces import IAWSFileClientUtility
+from collective.contentfiles2aws.interfaces import IFileStorageUtility
 from collective.contentfiles2aws.interfaces import IAWSImageField
 from collective.contentfiles2aws.client.fsclient import FileClientRemoveError
 from collective.contentfiles2aws.client.fsclient import FileClientCopyError
 from collective.contentfiles2aws.config import ABORT_TRANSACTION_FLAG
 from collective.contentfiles2aws.config import SKIP_SOURCE_REMOVE_FLAG
 
+
 class AWSSourceRemoveError(Exception):
     pass
 
+
 class AWSSourceCopyError(Exception):
     pass
+
 
 def remove_source(obj):
     """ Remove file data from amazon.
@@ -31,19 +34,20 @@ def remove_source(obj):
     """
     obj_fields = utils.getAWSFields(obj)
     for field, value in obj_fields:
-       aws_utility = getUtility(IAWSFileClientUtility)
-       if not aws_utility.active():
-           raise AWSSourceRemoveError("Could not delete remote source. "
-                                      "To be able to delete object properly, "
-                                      "please activate AWS storage")
-       as3client = aws_utility.get_file_client()
-       if hasattr(value, 'source_id') and value.source_id:
-           try:
-               as3client.delete(value.source_id)
-               if IAWSImageField.providedBy(field):
-                   field.removeScales(obj)
-           except FileClientRemoveError, e:
-               raise AWSSourceRemoveError(e.message)
+        fsutility = getUtility(IFileStorageUtility)
+        if not fsutility.active():
+            raise AWSSourceRemoveError("Could not delete remote source. "
+                                       "To be able to delete object properly, "
+                                       "please activate AWS storage")
+        fclient = fsutility.get_file_client()
+        if hasattr(value, 'source_id') and value.source_id:
+            try:
+                fclient.delete(value.source_id)
+                if IAWSImageField.providedBy(field):
+                    field.removeScales(obj)
+            except FileClientRemoveError, e:
+                raise AWSSourceRemoveError(e.message)
+
 
 def clone_source(obj):
     """ Creates copy of file data on amazon.
@@ -62,14 +66,14 @@ def clone_source(obj):
             # source already cloned
             return
 
-        as3client = aws_utility.get_file_client()
-        as3client.copy_source(old_sid, new_sid)
+        fclient = fsutility.get_file_client()
+        fclient.copy_source(old_sid, new_sid)
         aws_file.source_id = new_sid
 
     obj_fields = utils.getAWSFields(obj)
     for field, value in obj_fields:
-        aws_utility = getUtility(IAWSFileClientUtility)
-        if not aws_utility.active():
+        fsutility = getUtility(IFileStorageUtility)
+        if not fsutility.active():
             raise AWSSourceCopyError("Could not copy remote source. "
                                      "To be able to copy object properly, "
                                      "please activate AWS storage")
@@ -83,6 +87,7 @@ def clone_source(obj):
             except (FileClientCopyError, FileClientRemoveError), e:
                 raise AWSSourceCopyError(e.message)
 
+
 def before_file_remove(obj, event):
     request = getattr(obj, 'REQUEST', '')
     if request and hasattr(request, 'ACTUAL_URL') and \
@@ -93,7 +98,7 @@ def before_file_remove(obj, event):
 
     # skip source remove if we have appropriate flag set in request
     annotations = IAnnotations(request)
-    if annotations and annotations.has_key(SKIP_SOURCE_REMOVE_FLAG) and \
+    if annotations and SKIP_SOURCE_REMOVE_FLAG in annotations and \
             annotations[SKIP_SOURCE_REMOVE_FLAG]:
         return
 
@@ -103,11 +108,13 @@ def before_file_remove(obj, event):
         IStatusMessage(request).addStatusMessage(_(e), type='error')
         utils.abort_transaction(request)
 
+
 def abort_remove(obj, event):
     annotations = IAnnotations(obj.REQUEST)
-    if annotations and annotations.has_key(ABORT_TRANSACTION_FLAG) and \
+    if annotations and ABORT_TRANSACTION_FLAG in annotations and \
             annotations[ABORT_TRANSACTION_FLAG]:
         transaction.abort()
+
 
 def object_cloned(obj, event):
 
@@ -118,7 +125,7 @@ def object_cloned(obj, event):
         utils.skip_source_remove(obj.REQUEST)
         catalog.uncatalog_object('/'.join(obj.getPhysicalPath()))
         for brain in catalog(path={'depth': 1,
-            'query': '/'.join(obj.getPhysicalPath())}):
+                                   'query': '/'.join(obj.getPhysicalPath())}):
             catalog.uncatalog_object(brain.getPath())
         container.manage_delObjects(ids=[obj.getId()])
 
