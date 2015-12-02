@@ -3,7 +3,7 @@ from zope.component import getUtility
 from Products.Five.browser import BrowserView
 
 from collective.contentfiles2aws.awsfile import AWSFile
-from collective.contentfiles2aws.interfaces import IAWSFileClientUtility
+from collective.contentfiles2aws.interfaces import IFileStorageUtility
 
 
 class AWSUtilView(BrowserView):
@@ -24,7 +24,7 @@ class AWSUtilView(BrowserView):
         if hasattr(brain, 'aws_sources') and brain.aws_sources and \
            name in brain.aws_sources:
             sid = brain.aws_sources[name]
-            utility = getUtility(IAWSFileClientUtility)
+            utility = getUtility(IFileStorageUtility)
             url = '%s/%s' % (utility.get_url_prefix(), sid)
         else:
             url = '%s/%s' % (brain.getURL(), name)
