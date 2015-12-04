@@ -16,8 +16,8 @@ class InstallTestCase(unittest2.TestCase):
     def test_properties(self):
         """ Checks that all properties were installed."""
 
-        prop_names = ('AWS_KEY_ID', 'AWS_SEECRET_KEY', 'AWS_BUCKET_NAME',
-                      'AWS_FILENAME_PREFIX', 'ALTERNATIVE_CDN_DOMAIN')
+        prop_names = ('AWS_KEY_ID', 'AWS_SECRET_KEY', 'AWS_BUCKET_NAME',
+                      'AWS_FILENAME_PREFIX', 'ALT_DOMAIN')
 
         portal = self.layer['portal']
         properties = getToolByName(portal, 'portal_properties')

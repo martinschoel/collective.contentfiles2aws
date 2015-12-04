@@ -1,6 +1,8 @@
 import os
 import unittest2
 
+from collective.contentfiles2aws.config import ACTIVE_STORAGE_PNAME, \
+    AWS_STORAGE
 from collective.contentfiles2aws.testing import \
     AWS_CONTENT_FILES_INTEGRATION_TESTING
 
@@ -20,19 +22,20 @@ class AWSFileFieldTestCase(unittest2.TestCase):
         self.awsfile = getattr(portal, fid)
         self.awsfile.update(file=self._get_image())
 
-    def test_use_aws(self):
-        self.assert_(not self.awsfile.schema['file'].use_aws(self.awsfile))
+    def test_use_fstorage(self):
+        self.assert_(
+            not self.awsfile.schema['file'].use_fstorage(self.awsfile))
 
         portal = self.layer['portal']
         sheet = portal.portal_properties.contentfiles2aws
-        sheet._updateProperty('USE_AWS', True)
+        sheet._updateProperty(ACTIVE_STORAGE_PNAME, AWS_STORAGE)
 
-        self.assert_(self.awsfile.schema['file'].use_aws(self.awsfile))
+        self.assert_(self.awsfile.schema['file'].use_fstorage(self.awsfile))
 
     def test_migrate(self):
         portal = self.layer['portal']
         sheet = portal.portal_properties.contentfiles2aws
-        sheet._updateProperty('USE_AWS', True)
+        sheet._updateProperty(ACTIVE_STORAGE_PNAME, AWS_STORAGE)
 
         self.assert_(self.awsfile.schema['file'].migrate(self.awsfile))
 
@@ -46,7 +49,7 @@ class AWSFileFieldTestCase(unittest2.TestCase):
         portal = self.layer['portal']
         sheet = portal.portal_properties.contentfiles2aws
         sheet._updateProperty('AWS_BUCKET_NAME', 'contentfiles')
-        sheet._updateProperty('USE_AWS', True)
+        sheet._updateProperty(ACTIVE_STORAGE_PNAME, AWS_STORAGE)
         fid = portal.invokeFactory('AWSFile', 'awsfile2')
         awsfile2 = getattr(portal, fid)
         awsfile2.update(file=self._get_image())

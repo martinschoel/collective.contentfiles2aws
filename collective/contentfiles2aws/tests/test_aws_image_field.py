@@ -4,6 +4,8 @@ import unittest2
 from OFS.Image import Image
 
 from collective.contentfiles2aws.awsfile import AWSFile
+from collective.contentfiles2aws.config import ACTIVE_STORAGE_PNAME, \
+    AWS_STORAGE
 from collective.contentfiles2aws.testing import \
     AWS_CONTENT_FILES_INTEGRATION_TESTING
 
@@ -39,7 +41,7 @@ class AWSImageFieldTestCase(unittest2.TestCase):
         image = field.get(self.awsimage)
         self.assert_(isinstance(image, Image))
 
-        self.conf_sheet._updateProperty('USE_AWS', True)
+        self.conf_sheet._updateProperty(ACTIVE_STORAGE_PNAME, AWS_STORAGE)
         self.awsimage.REQUEST['image_migrate'] = True
         image = field.get(self.awsimage)
         self.assert_(isinstance(image, AWSFile))
@@ -49,7 +51,7 @@ class AWSImageFieldTestCase(unittest2.TestCase):
 
     def test_set(self):
         self.conf_sheet._updateProperty('AWS_BUCKET_NAME', 'contentfiles')
-        self.conf_sheet._updateProperty('USE_AWS', True)
+        self.conf_sheet._updateProperty(ACTIVE_STORAGE_PNAME, AWS_STORAGE)
         fid = self.portal.invokeFactory('AWSImage', 'awsimage2')
         awsimage2 = getattr(self.portal, fid)
 
@@ -64,7 +66,7 @@ class AWSImageFieldTestCase(unittest2.TestCase):
             self.assertEqual('AWS File', scale.meta_type)
 
     def test_createScales(self):
-        self.conf_sheet._updateProperty('USE_AWS', True)
+        self.conf_sheet._updateProperty(ACTIVE_STORAGE_PNAME, AWS_STORAGE)
         field = self.awsimage.schema['image']
         field.sizes['new_scale'] = (100, 100)
         field.createScales(self.awsimage)
@@ -72,7 +74,7 @@ class AWSImageFieldTestCase(unittest2.TestCase):
         self.assert_(isinstance(new_scale, AWSFile))
 
     def test_tag(self):
-        self.conf_sheet._updateProperty('USE_AWS', True)
+        self.conf_sheet._updateProperty(ACTIVE_STORAGE_PNAME, AWS_STORAGE)
         self.conf_sheet._updateProperty('AWS_BUCKET_NAME', 'contentfiles')
         field = self.awsimage.schema['image']
 

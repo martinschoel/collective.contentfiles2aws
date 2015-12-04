@@ -2,6 +2,6 @@
     xmlns="http://namespaces.zope.org/zope"
     i18n_domain="collective.contentfiles2aws">
 
-    <utility component="collective.contentfiles2aws.utility.aws_utility"/>
+    <utility component="collective.contentfiles2aws.utility.fsutility"/>
 
 </configure>

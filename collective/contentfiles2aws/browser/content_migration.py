@@ -6,7 +6,7 @@ from Products.Archetypes.ArchetypeTool import getType
 
 from plone.indexer.interfaces import IIndexableObject
 
-from collective.contentfiles2aws.interfaces import IAWSFileClientUtility
+from collective.contentfiles2aws.interfaces import IFileStorageUtility
 from collective.contentfiles2aws.interfaces import IAWSField
 
 
@@ -68,8 +68,8 @@ class ContentMigrationView(BrowserView):
         return results
 
     def __call__(self):
-        aws_utility = getUtility(IAWSFileClientUtility)
-        if not aws_utility.active():
+        fsutility = getUtility(IFileStorageUtility)
+        if not fsutility.active():
             return "AWSStorage isn't active. Nothing to do!"
 
         result = ''

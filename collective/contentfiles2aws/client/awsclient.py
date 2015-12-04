@@ -35,13 +35,14 @@ class AWSFileClient(object):
 
     implements(IAWSFileClient)
 
-    def __init__(self, aws_key_id, aws_seecret_key, bucket_name,
-                 aws_filename_prefix=None):
+    def __init__(self, aws_key_id, aws_secret_key, bucket_name,
+                 aws_filename_prefix=None, default_metadata={}):
         self._aws_key_id = aws_key_id
-        self._aws_seecret_key = aws_seecret_key
+        self._aws_secret_key = aws_secret_key
         self.bucket_name = bucket_name
-        self.connection = S3Connection(aws_key_id, aws_seecret_key)
+        self.connection = S3Connection(aws_key_id, aws_secret_key)
         self.aws_filename_prefix = aws_filename_prefix
+        self.default_metadata = default_metadata
 
     def _get_bucket_name(self, **kw):
         bucket_name = self.bucket_name
@@ -91,9 +92,12 @@ class AWSFileClient(object):
 
         """
 
+        if self.default_metadata:
+            kw.update(self.default_metadata)
+
         mimetype = None
         if 'mimetype' in kw and kw['mimetype']:
-            mimetype = kw['mimetype']
+            mimetype = kw.pop("mimetype")
 
         conn = self.connection
         bucket_name = self._get_bucket_name(**kw)
@@ -118,6 +122,12 @@ class AWSFileClient(object):
                         fname = '_'.join(filename.split('_')[3:])
                     key.set_metadata("Content-Disposition",
                                      "attachment; filename*=UTF-8''%s" % fname)
+            # set additional metadata
+            if kw:
+                for k, v in kw.items():
+                    if v:
+                        key.set_metadata(k, v)
+
             key.set_contents_from_string(data)
             key.set_acl('public-read')
         except S3ResponseError, e:

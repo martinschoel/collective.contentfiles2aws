@@ -16,7 +16,8 @@ from collective.contentfiles2aws.widgets import AWSFileWidget
 from collective.contentfiles2aws.widgets import AWSImageWidget
 from collective.contentfiles2aws.interfaces import IAWSFileField
 from collective.contentfiles2aws.interfaces import IAWSImageField
-from collective.contentfiles2aws.config import AWSCONF_SHEET
+from collective.contentfiles2aws.config import AWSCONF_SHEET, \
+    ACTIVE_STORAGE_PNAME, STORAGES
 
 _marker = []
 
@@ -44,13 +45,13 @@ class AWSFileField(FileField):
 
     security = ClassSecurityInfo()
 
-    def use_aws(self, instance):
+    def use_fstorage(self, instance):
         pp = getToolByName(instance, 'portal_properties')
-        awsconf_sheet = getattr(pp, AWSCONF_SHEET)
-        return awsconf_sheet.getProperty('USE_AWS')
+        awsconf = getattr(pp, AWSCONF_SHEET)
+        return awsconf.getProperty(ACTIVE_STORAGE_PNAME) in STORAGES
 
     def migrate(self, instance):
-        if not self.use_aws(instance):
+        if not self.use_fstorage(instance):
             return
 
         obj = self.get(instance)
@@ -108,7 +109,7 @@ class AWSImageField(ImageField, AWSFileField):
 
     security.declarePrivate('get')
     def get(self, instance, **kwargs):
-        if not self.use_aws(instance):
+        if not self.use_fstorage(instance):
             return ImageField.get(self, instance, **kwargs)
 
         request = instance.REQUEST
@@ -127,7 +128,7 @@ class AWSImageField(ImageField, AWSFileField):
         """
 
         image = self.getScale(instance, scale=scale)
-        if not self.use_aws(instance) and not isinstance(image, AWSFile):
+        if not self.use_fstorage(instance) and not isinstance(image, AWSFile):
             return ImageField.tag(self, instance, scale=scale, height=height,
                                   width=width, alt=alt, css_class=css_class,
                                   title=title, **kwargs)

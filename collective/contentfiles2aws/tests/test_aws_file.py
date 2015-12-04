@@ -8,6 +8,8 @@ from Products.statusmessages.interfaces import IStatusMessage
 from plone.app.testing import setRoles, TEST_USER_ID
 
 from collective.contentfiles2aws.awsfile import AWSFile
+from collective.contentfiles2aws.config import ACTIVE_STORAGE_PNAME, \
+    AWS_STORAGE, STORAGE_OFF
 from collective.contentfiles2aws.testing import \
     AWS_CONTENT_FILES_INTEGRATION_TESTING
 
@@ -15,7 +17,7 @@ from collective.contentfiles2aws.testing import \
 class AWSFileTestCase(unittest2.TestCase):
     """ AWSFile test case. """
 
-    layer =  AWS_CONTENT_FILES_INTEGRATION_TESTING
+    layer = AWS_CONTENT_FILES_INTEGRATION_TESTING
 
     def _get_image(self, filename='image.gif'):
         dir_name = os.path.dirname(os.path.abspath(__file__))
@@ -23,7 +25,7 @@ class AWSFileTestCase(unittest2.TestCase):
 
     def setUp(self):
         self.portal = self.layer['portal']
-        self.conf_sheet=self.portal.portal_properties.contentfiles2aws
+        self.conf_sheet = self.portal.portal_properties.contentfiles2aws
 
     def test_AWSFileFTI(self):
         # test some basic fti properties.
@@ -44,7 +46,7 @@ class AWSFileTestCase(unittest2.TestCase):
 
     def test_AWSFileCreation(self):
         self.conf_sheet._updateProperty('AWS_BUCKET_NAME', 'contentfiles')
-        self.conf_sheet._updateProperty('USE_AWS', True)
+        self.conf_sheet._updateProperty(ACTIVE_STORAGE_PNAME, AWS_STORAGE)
 
         fid = self.portal.invokeFactory('AWSFile', 'aws_file')
         aws_file = getattr(self.portal, fid)
@@ -56,7 +58,7 @@ class AWSFileTestCase(unittest2.TestCase):
 
     def test_AWSFileUpdate(self):
         self.conf_sheet._updateProperty('AWS_BUCKET_NAME', 'contentfiles')
-        self.conf_sheet._updateProperty('USE_AWS', True)
+        self.conf_sheet._updateProperty(ACTIVE_STORAGE_PNAME, AWS_STORAGE)
 
         fid = self.portal.invokeFactory('AWSFile', 'aws_file')
         aws_file = getattr(self.portal, fid)
@@ -73,7 +75,7 @@ class AWSFileTestCase(unittest2.TestCase):
         self.assert_(not value.__dict__['data'])
 
         # update file when aws is turned off
-        self.conf_sheet._updateProperty('USE_AWS', False)
+        self.conf_sheet._updateProperty(ACTIVE_STORAGE_PNAME, STORAGE_OFF)
         aws_file.update(file=self._get_image())
 
         # check if file field attribute value has proper type (File)
@@ -84,13 +86,13 @@ class AWSFileTestCase(unittest2.TestCase):
         self.assert_(value.data)
 
         # update file when aws is turned on
-        self.conf_sheet._updateProperty('USE_AWS', True)
+        self.conf_sheet._updateProperty(ACTIVE_STORAGE_PNAME, AWS_STORAGE)
         aws_file.update(file=self._get_image(filename='aws.gif'))
 
         # check if file field attribute value has proper type (AWSFile)
         value = aws_file.getField('file').get(aws_file)
         self.assert_(isinstance(value, AWSFile))
-        self.assert_(not 'data' in value.__dict__)
+        self.assert_('data' not in value.__dict__)
 
         # update file when there is problems with amazon
         self.conf_sheet._updateProperty('AWS_KEY_ID', 'BAD_KEY')
@@ -103,7 +105,7 @@ class AWSFileTestCase(unittest2.TestCase):
 
     def test_AWSFileCopy(self):
         self.conf_sheet._updateProperty('AWS_BUCKET_NAME', 'contentfiles')
-        self.conf_sheet._updateProperty('USE_AWS', True)
+        self.conf_sheet._updateProperty(ACTIVE_STORAGE_PNAME, AWS_STORAGE)
 
         fid = self.portal.invokeFactory('AWSFile', 'aws_file')
         aws_file = getattr(self.portal, fid)
@@ -119,7 +121,7 @@ class AWSFileTestCase(unittest2.TestCase):
 
         aws_file_copy = getattr(self.portal, 'copy_of_aws_file')
         copy_source_id = \
-                aws_file_copy.getField('file').get(aws_file_copy).source_id
+            aws_file_copy.getField('file').get(aws_file_copy).source_id
 
         self.assertNotEqual(original_source_id, copy_source_id)
 
@@ -129,7 +131,7 @@ class AWSFileTestCase(unittest2.TestCase):
         self.assert_(aws_file_copy.getField('file').get(aws_file_copy).data)
 
         # check file copy handler when 'aws storage' is turned off.
-        self.conf_sheet._updateProperty('USE_AWS', False)
+        self.conf_sheet._updateProperty(ACTIVE_STORAGE_PNAME, STORAGE_OFF)
 
         # lets make new copy from previous one.
         cp = self.portal.manage_copyObjects(ids=['copy_of_aws_file'])
@@ -143,11 +145,11 @@ class AWSFileTestCase(unittest2.TestCase):
 
         messages = IStatusMessage(self.layer['request']).showStatusMessages()
         error_message = ('Could not copy remote source. To be able to copy '
-                        'object properly, please activate AWS storage')
+                         'object properly, please activate AWS storage')
         self.assert_(error_message in [m.message for m in messages])
 
         # check that folderish objects with aws files inside works properly.
-        self.conf_sheet._updateProperty('USE_AWS', True)
+        self.conf_sheet._updateProperty(ACTIVE_STORAGE_PNAME, AWS_STORAGE)
         setRoles(self.portal, TEST_USER_ID, ["Manager"])
         self.portal.invokeFactory('Folder', 'folder')
         folder = getattr(self.portal, 'folder')
@@ -165,13 +167,13 @@ class AWSFileTestCase(unittest2.TestCase):
 
         original_source_id = aws_file.getField('file').get(aws_file).source_id
         copy_source_id = \
-                aws_file_copy.getField('file').get(aws_file_copy).source_id
+            aws_file_copy.getField('file').get(aws_file_copy).source_id
 
         self.assertNotEqual(original_source_id, copy_source_id)
 
         # check file copy handler for folderish objects
         # when 'aws storage' is turned off.
-        self.conf_sheet._updateProperty('USE_AWS', False)
+        self.conf_sheet._updateProperty(ACTIVE_STORAGE_PNAME, STORAGE_OFF)
 
         cp = self.portal.manage_copyObjects(ids=['folder'])
 
@@ -182,7 +184,7 @@ class AWSFileTestCase(unittest2.TestCase):
 
         messages = IStatusMessage(self.layer['request']).showStatusMessages()
         error_message = ('Could not copy remote source. To be able to copy '
-                        'object properly, please activate AWS storage')
+                         'object properly, please activate AWS storage')
         self.assert_(error_message in [m.message for m in messages])
 
         setRoles(self.portal, TEST_USER_ID, ["Member"])

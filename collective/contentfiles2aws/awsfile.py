@@ -6,7 +6,7 @@ from AccessControl.Permissions import view as View
 
 from zope.component import getUtility
 
-from collective.contentfiles2aws.interfaces import IAWSFileClientUtility
+from collective.contentfiles2aws.interfaces import IFileStorageUtility
 from collective.contentfiles2aws.client.fsclient import FileClientRetrieveError
 
 
@@ -17,12 +17,12 @@ class AWSFile(File):
     filename = u''
     data = ''
     # for image files
-    height=''
-    width=''
+    height = ''
+    width = ''
 
     security = ClassSecurityInfo()
 
-    def __init__(self, id, size=0,filename=u'', content_type=''):
+    def __init__(self, id, size=0, filename=u'', content_type=''):
         self.__name__ = id
         self.size = size
         self.filename = filename
@@ -41,11 +41,11 @@ class AWSFile(File):
         if 'data' in self.__dict__ and self.__dict__['data']:
             return self.__dict__['data']
 
-        aws_utility = getUtility(IAWSFileClientUtility)
-        as3client = aws_utility.get_file_client()
+        fsutility = getUtility(IFileStorageUtility)
+        fclient = fsutility.get_file_client()
         if self.source_id:
             try:
-                return as3client.get(self.source_id)
+                return fclient.get(self.source_id)
             except FileClientRetrieveError:
                 return ''
 
@@ -71,12 +71,12 @@ class AWSFile(File):
         return RESPONSE.redirect(self.absolute_url())
 
     def absolute_url(self):
-        aws_utility = getUtility(IAWSFileClientUtility)
-        return aws_utility.get_source_url(self.source_id)
+        fsutility = getUtility(IFileStorageUtility)
+        return fsutility.get_source_url(self.source_id)
 
     def remove_source(self):
-        aws_utility = getUtility(IAWSFileClientUtility)
-        as3client = aws_utility.get_file_client()
+        fsutility = getUtility(IFileStorageUtility)
+        as3client = fsutility.get_file_client()
         if self.source_id:
             as3client.delete(self.source_id)
 
@@ -88,26 +88,28 @@ class AWSFile(File):
             # this is file not image
             return ''
 
-        if height is None: height=self.height
-        if width is None:  width=self.width
+        if height is None:
+            height = self.height
+        if width is None:
+            width = self.width
 
         # Auto-scaling support
         xdelta = xscale or scale
         ydelta = yscale or scale
 
         if xdelta and width:
-            width =  str(int(round(int(width) * xdelta)))
+            width = str(int(round(int(width) * xdelta)))
         if ydelta and height:
             height = str(int(round(int(height) * ydelta)))
 
-        result='<img src="%s"' % (self.absolute_url())
+        result = '<img src="%s"' % (self.absolute_url())
 
         if alt is None:
-            alt=getattr(self, 'alt', '')
+            alt = getattr(self, 'alt', '')
         result = '%s alt="%s"' % (result, escape(alt, 1))
 
         if title is None:
-            title=getattr(self, 'title', '')
+            title = getattr(self, 'title', '')
         result = '%s title="%s"' % (result, escape(title, 1))
 
         if height:

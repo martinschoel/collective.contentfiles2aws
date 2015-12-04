@@ -1,6 +1,21 @@
 Changelog
 =========
 
+1.4.0 - December 4, 2015
+------------------------
+
+ - Added ability to set additional metadata for aws files.
+   [Taras Melnychuk]
+
+ - Improved local storage implementation:
+    * Refactored storage utility
+    * Added tests
+   [Taras Melnychuk]
+
+ - Add base implementation for local file storage.
+   [Taras Melnychuk]
+
+
 1.3.0 - December 12, 2014
 -------------------------
 
