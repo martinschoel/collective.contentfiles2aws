@@ -1,8 +1,8 @@
 Changelog
 =========
 
-1.4.0 - Unreleased
--------------------------
+1.4.0 - December 4, 2015
+------------------------
 
  - Added ability to set additional metadata for aws files.
    [Taras Melnychuk]
