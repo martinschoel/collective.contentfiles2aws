@@ -80,7 +80,7 @@ class FileStorageUtility(object):
         if self.active():
             domain = self._get_domain()
             if domain:
-                url = "http://%s" % domain
+                url = "//%s" % domain
 
                 prefix = self._get_filename_prefix()
                 if prefix:

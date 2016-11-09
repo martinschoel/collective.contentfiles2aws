@@ -1,6 +1,14 @@
 Changelog
 =========
 
+
+1.4.1 - November 9, 2016
+------------------------
+
+ - Use protocol-relative source urls.
+   [Taras Melnychuk]
+
+
 1.4.0 - December 4, 2015
 ------------------------
 
